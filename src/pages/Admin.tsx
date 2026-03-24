@@ -74,7 +74,7 @@ export default function Admin() {
               <input
                 type="password"
                 required
-                value={password}
+                value={39271927}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter Password"
                 className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500 text-center tracking-widest"
