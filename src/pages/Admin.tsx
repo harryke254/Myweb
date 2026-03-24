@@ -1,65 +1,44 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
-import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
-import { auth } from '../firebase';
 import { LayoutDashboard, Music, Calendar, Users, LogOut, Lock } from 'lucide-react';
 
 import AdminMixes from '../components/AdminMixes';
 import AdminEvents from '../components/AdminEvents';
-import AdminBookings from '../components/AdminBookings';
 
 export default function Admin() {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Check if already authenticated in this session
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
-    return () => unsubscribe();
+    const authState = sessionStorage.getItem('admin_auth');
+    if (authState === 'true') {
+      setIsAuthenticated(true);
+    }
   }, []);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
-    const email = 'harrisonreycaspian@gmail.com';
     
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error: any) {
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-        try {
-          await createUserWithEmailAndPassword(auth, email, password);
-        } catch (createError: any) {
-          if (createError.code === 'auth/email-already-in-use') {
-             setLoginError('Incorrect password.');
-          } else {
-             setLoginError('Please enable Email/Password Authentication in your Firebase Console.');
-             console.error(createError);
-          }
-        }
-      } else {
-        setLoginError('Failed to login. Please check your password.');
-        console.error(error);
-      }
+    if (password === '39271927') {
+      setIsAuthenticated(true);
+      sessionStorage.setItem('admin_auth', 'true');
+    } else {
+      setLoginError('Incorrect password.');
     }
   };
 
-  const handleLogout = async () => {
-    await signOut(auth);
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    sessionStorage.removeItem('admin_auth');
     navigate('/');
   };
 
-  if (loading) {
-    return <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-white">Loading...</div>;
-  }
-
-  if (!user) {
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
         <div className="bg-zinc-900 p-8 rounded-2xl border border-zinc-800 max-w-md w-full text-center">
@@ -67,14 +46,14 @@ export default function Admin() {
             <Lock size={32} />
           </div>
           <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-2">Admin Access</h2>
-          <p className="text-zinc-400 mb-8">Enter your admin password to continue.</p>
+          <p className="text-zinc-400 mb-8">Enter your secret password to continue.</p>
           
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <input
                 type="password"
                 required
-                value={39271927}
+                value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter Password"
                 className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500 text-center tracking-widest"
@@ -96,7 +75,6 @@ export default function Admin() {
   const NAV_ITEMS = [
     { path: '/admin', label: 'Mixes', icon: Music },
     { path: '/admin/events', label: 'Events', icon: Calendar },
-    { path: '/admin/bookings', label: 'Bookings', icon: Users },
   ];
 
   return (
@@ -133,11 +111,11 @@ export default function Admin() {
         <div className="p-4 border-t border-zinc-800">
           <div className="flex items-center gap-3 mb-4 px-2">
             <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-lg">
-              {user.email?.[0].toUpperCase()}
+              A
             </div>
             <div className="overflow-hidden text-left">
               <div className="text-sm font-bold text-white truncate">Admin</div>
-              <div className="text-xs text-zinc-500 truncate">{user.email}</div>
+              <div className="text-xs text-zinc-500 truncate">Solo Admin</div>
             </div>
           </div>
           <button
@@ -155,7 +133,6 @@ export default function Admin() {
         <Routes>
           <Route path="/" element={<AdminMixes />} />
           <Route path="/events" element={<AdminEvents />} />
-          <Route path="/bookings" element={<AdminBookings />} />
         </Routes>
       </main>
     </div>

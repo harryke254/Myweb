@@ -6,22 +6,6 @@ service cloud.firestore {
     // Helper Functions
     // ===============================================================
     
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
-    function isAdmin() {
-      return isAuthenticated() && (
-        request.auth.token.email == "harrisonreycaspian@gmail.com" ||
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
-      );
-    }
-    
-    function isValidEmail(email) {
-      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
-    }
-    
     function hasOnlyAllowedFields(allowedFields) {
       return request.resource.data.keys().hasOnly(allowedFields);
     }
@@ -53,25 +37,6 @@ service cloud.firestore {
              data.status is string && data.status in ['Available', 'Selling Fast', 'Sold Out'] &&
              data.createdAt is string;
     }
-    
-    function isValidBooking() {
-      let data = request.resource.data;
-      return hasOnlyAllowedFields(['name', 'email', 'eventType', 'date', 'message', 'status', 'createdAt']) &&
-             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
-             data.email is string && isValidEmail(data.email) &&
-             data.eventType is string && data.eventType.size() > 0 && data.eventType.size() < 50 &&
-             data.date is string && data.date.size() > 0 && data.date.size() < 20 &&
-             data.message is string && data.message.size() < 2000 &&
-             data.status is string && data.status in ['pending', 'confirmed', 'rejected'] &&
-             data.createdAt is string;
-    }
-    
-    function isValidUser() {
-      let data = request.resource.data;
-      return hasOnlyAllowedFields(['email', 'role']) &&
-             data.email is string && isValidEmail(data.email) &&
-             data.role == 'admin';
-    }
 
     // ===============================================================
     // Rules
@@ -79,30 +44,16 @@ service cloud.firestore {
     
     match /mixes/{mixId} {
       allow read: if true;
-      allow create: if isAdmin() && isValidMix();
-      allow update: if isAdmin() && isValidMix();
-      allow delete: if isAdmin();
+      allow create: if isValidMix();
+      allow update: if isValidMix();
+      allow delete: if true;
     }
     
     match /events/{eventId} {
       allow read: if true;
-      allow create: if isAdmin() && isValidEvent();
-      allow update: if isAdmin() && isValidEvent();
-      allow delete: if isAdmin();
-    }
-    
-    match /bookings/{bookingId} {
-      allow read: if isAdmin();
-      allow create: if isValidBooking() && request.resource.data.status == 'pending';
-      allow update: if isAdmin() && isValidBooking();
-      allow delete: if isAdmin();
-    }
-    
-    match /users/{userId} {
-      allow read: if isAdmin();
-      allow create: if isAdmin() && isValidUser();
-      allow update: if isAdmin() && isValidUser();
-      allow delete: if isAdmin();
+      allow create: if isValidEvent();
+      allow update: if isValidEvent();
+      allow delete: if true;
     }
   }
 }
