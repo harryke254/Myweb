@@ -1,0 +1,77 @@
+{
+  "entities": {
+    "Mix": {
+      "title": "Mix",
+      "description": "A DJ mixtape uploaded by the admin",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Title of the mix" },
+        "genre": { "type": "string", "description": "Genre of the mix" },
+        "audioUrl": { "type": "string", "description": "URL to the audio file in Firebase Storage" },
+        "imageUrl": { "type": "string", "description": "URL to the cover image" },
+        "duration": { "type": "string", "description": "Duration of the mix" },
+        "plays": { "type": "number", "description": "Number of plays" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["title", "genre", "audioUrl", "imageUrl", "duration", "plays", "createdAt"]
+    },
+    "Event": {
+      "title": "Event",
+      "description": "An upcoming event or gig",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Title of the event" },
+        "date": { "type": "string", "description": "Date of the event (e.g., OCT 15)" },
+        "day": { "type": "string", "description": "Day of the week (e.g., Saturday)" },
+        "venue": { "type": "string", "description": "Venue name" },
+        "location": { "type": "string", "description": "City, Country" },
+        "status": { "type": "string", "description": "Status (Available, Selling Fast, Sold Out)" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["title", "date", "day", "venue", "location", "status", "createdAt"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "A booking request from a user",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Full name of the requester" },
+        "email": { "type": "string", "format": "email", "description": "Email address" },
+        "eventType": { "type": "string", "description": "Type of event" },
+        "date": { "type": "string", "description": "Date of the event" },
+        "message": { "type": "string", "description": "Additional details" },
+        "status": { "type": "string", "description": "Status of the booking (pending, confirmed, rejected)" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["name", "email", "eventType", "date", "message", "status", "createdAt"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile with role",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email", "description": "User email" },
+        "role": { "type": "string", "description": "User role (admin)" }
+      },
+      "required": ["email", "role"]
+    }
+  },
+  "firestore": {
+    "/mixes/{mixId}": {
+      "schema": { "$ref": "#/entities/Mix" },
+      "description": "Collection of all mixtapes"
+    },
+    "/events/{eventId}": {
+      "schema": { "$ref": "#/entities/Event" },
+      "description": "Collection of all upcoming events"
+    },
+    "/bookings/{bookingId}": {
+      "schema": { "$ref": "#/entities/Booking" },
+      "description": "Collection of all booking requests"
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Collection of users and their roles"
+    }
+  }
+}
