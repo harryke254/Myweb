@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth } from '../firebase';
-import { LayoutDashboard, Music, Calendar, Users, LogOut } from 'lucide-react';
+import { LayoutDashboard, Music, Calendar, Users, LogOut, Lock } from 'lucide-react';
 
 import AdminMixes from '../components/AdminMixes';
 import AdminEvents from '../components/AdminEvents';
@@ -11,6 +11,8 @@ import AdminBookings from '../components/AdminBookings';
 export default function Admin() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -22,13 +24,29 @@ export default function Admin() {
     return () => unsubscribe();
   }, []);
 
-  const handleLogin = async () => {
-    const provider = new GoogleAuthProvider();
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+    const email = 'harrisonreycaspian@gmail.com';
+    
     try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error('Login error', error);
-      alert('Failed to login');
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error: any) {
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        try {
+          await createUserWithEmailAndPassword(auth, email, password);
+        } catch (createError: any) {
+          if (createError.code === 'auth/email-already-in-use') {
+             setLoginError('Incorrect password.');
+          } else {
+             setLoginError('Please enable Email/Password Authentication in your Firebase Console.');
+             console.error(createError);
+          }
+        }
+      } else {
+        setLoginError('Failed to login. Please check your password.');
+        console.error(error);
+      }
     }
   };
 
@@ -45,14 +63,31 @@ export default function Admin() {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
         <div className="bg-zinc-900 p-8 rounded-2xl border border-zinc-800 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-orange-500/10 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Lock size={32} />
+          </div>
           <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-2">Admin Access</h2>
-          <p className="text-zinc-400 mb-8">Login to manage your website content.</p>
-          <button
-            onClick={handleLogin}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-bold uppercase tracking-wider transition-colors"
-          >
-            Sign in with Google
-          </button>
+          <p className="text-zinc-400 mb-8">Enter your admin password to continue.</p>
+          
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter Password"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500 text-center tracking-widest"
+              />
+            </div>
+            {loginError && <p className="text-red-500 text-sm">{loginError}</p>}
+            <button
+              type="submit"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-bold uppercase tracking-wider transition-colors"
+            >
+              Login
+            </button>
+          </form>
         </div>
       </div>
     );
@@ -97,9 +132,11 @@ export default function Admin() {
 
         <div className="p-4 border-t border-zinc-800">
           <div className="flex items-center gap-3 mb-4 px-2">
-            <img src={user.photoURL || 'https://via.placeholder.com/40'} alt="Profile" className="w-10 h-10 rounded-full" referrerPolicy="no-referrer" />
-            <div className="overflow-hidden">
-              <div className="text-sm font-bold text-white truncate">{user.displayName}</div>
+            <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-lg">
+              {user.email?.[0].toUpperCase()}
+            </div>
+            <div className="overflow-hidden text-left">
+              <div className="text-sm font-bold text-white truncate">Admin</div>
               <div className="text-xs text-zinc-500 truncate">{user.email}</div>
             </div>
           </div>
